@@ -5,6 +5,8 @@ object Dependencies {
   object Versions {
     val cats                = "2.1.0"
     val catsEffect          = "2.0.0"
+    val catsRetry           = "1.1.1"
+    val log4Cats            = "1.1.1"
     val fs2                 = "2.1.0"
     val http4s              = "0.20.15"
     val circe               = "0.11.1"
@@ -15,6 +17,10 @@ object Dependencies {
     val scalaCheck          = "1.14.3"
     val scalaTest           = "3.1.0"
     val catsScalaCheck      = "0.2.0"
+
+    val enumeratum          = "1.6.1"
+    val sttp                = "2.2.1"
+    val sttpCirce           = "1.7.2"
   }
 
   object Libraries {
@@ -23,6 +29,8 @@ object Dependencies {
 
     lazy val cats                = "org.typelevel"         %% "cats-core"                  % Versions.cats
     lazy val catsEffect          = "org.typelevel"         %% "cats-effect"                % Versions.catsEffect
+    lazy val catsRetry           = "com.github.cb372"      %% "cats-retry"                 % Versions.catsRetry
+    lazy val log4Cats            = "io.chrisdavenport"     %% "log4cats-slf4j"             % Versions.log4Cats
     lazy val fs2                 = "co.fs2"                %% "fs2-core"                   % Versions.fs2
 
     lazy val http4sDsl           = http4s("http4s-dsl")
@@ -34,6 +42,11 @@ object Dependencies {
     lazy val circeParser         = circe("circe-parser")
     lazy val circeJava8          = circe("circe-java8")
     lazy val pureConfig          = "com.github.pureconfig" %% "pureconfig"                 % Versions.pureConfig
+
+    lazy val enumeratum          = "com.beachape"                 %% "enumeratum"          % Versions.enumeratum
+    lazy val enumeratumCirce     = "com.beachape"                 %% "enumeratum-circe"    % Versions.enumeratum
+    lazy val sttp                = "com.softwaremill.sttp.client" %% "core"                % Versions.sttp
+    lazy val sttpCirce           = "com.softwaremill.sttp"        %% "circe"               % Versions.sttpCirce
 
     // Compiler plugins
     lazy val kindProjector       = "org.spire-math"        %% "kind-projector"             % Versions.kindProjector

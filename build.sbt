@@ -5,7 +5,7 @@ version := "1.0.1"
 
 scalaVersion := "2.12.10"
 scalacOptions ++= Seq(
- "-deprecation",
+  "-deprecation",
   "-encoding",
   "UTF-8",
   "-feature",
@@ -34,6 +34,8 @@ libraryDependencies ++= Seq(
   compilerPlugin(Libraries.kindProjector),
   Libraries.cats,
   Libraries.catsEffect,
+  Libraries.catsRetry,
+  Libraries.log4Cats,
   Libraries.fs2,
   Libraries.http4sDsl,
   Libraries.http4sServer,
@@ -45,7 +47,11 @@ libraryDependencies ++= Seq(
   Libraries.circeJava8,
   Libraries.pureConfig,
   Libraries.logback,
-  Libraries.scalaTest        % Test,
-  Libraries.scalaCheck       % Test,
-  Libraries.catsScalaCheck   % Test
+  Libraries.enumeratum,
+  Libraries.enumeratumCirce,
+  Libraries.sttp,
+  Libraries.sttpCirce,
+  Libraries.scalaTest      % Test,
+  Libraries.scalaCheck     % Test,
+  Libraries.catsScalaCheck % Test
 )

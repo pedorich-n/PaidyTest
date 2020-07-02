@@ -11,3 +11,7 @@ case class HttpConfig(
     port: Int,
     timeout: FiniteDuration
 )
+
+case class OneFrameConfig(http: HttpConfig, retryPolicy: RetryPolicy)
+
+case class RetryPolicy(maxRetries: Int, delay: FiniteDuration)

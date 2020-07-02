@@ -1,10 +1,14 @@
 package forex.domain
 
+import scala.collection.immutable
+
 import cats.Show
+import enumeratum.EnumEntry.Uppercase
+import enumeratum.{ CirceEnum, Enum, EnumEntry }
 
-sealed trait Currency extends Product with Serializable
+sealed trait Currency extends EnumEntry with Uppercase
 
-object Currency {
+object Currency extends Enum[Currency] with CirceEnum[Currency] {
   case object AUD extends Currency
   case object CAD extends Currency
   case object CHF extends Currency
@@ -15,35 +19,16 @@ object Currency {
   case object SGD extends Currency
   case object USD extends Currency
 
-  implicit val show: Show[Currency] = Show.show {
-    case AUD => "AUD"
-    case CAD => "CAD"
-    case CHF => "CHF"
-    case EUR => "EUR"
-    case GBP => "GBP"
-    case NZD => "NZD"
-    case JPY => "JPY"
-    case SGD => "SGD"
-    case USD => "USD"
-  }
+  override val values: immutable.IndexedSeq[Currency] = findValues
 
-  def fromString(s: String): Currency = s.toUpperCase match {
-    case "AUD" => AUD
-    case "CAD" => CAD
-    case "CHF" => CHF
-    case "EUR" => EUR
-    case "GBP" => GBP
-    case "NZD" => NZD
-    case "JPY" => JPY
-    case "SGD" => SGD
-    case "USD" => USD
-  }
+  implicit val show: Show[Currency] = Show.show(_.entryName)
 
   val allPairs: List[(Currency, Currency)] = {
-    List(AUD, CAD, CHF, EUR, GBP, NZD, JPY, SGD, USD)
+    values
       .combinations(2)
       .flatMap(_.permutations)
       .collect { case List(from: Currency, to: Currency) => (from, to) }
       .toList
   }
+
 }
