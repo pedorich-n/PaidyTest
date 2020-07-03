@@ -1,24 +1,25 @@
 package forex.services.oneframe.interpreters
 
 import cats.effect.{ Async, Timer }
-import forex.config.OneFrameConfig
-import forex.domain.Rate
-import forex.services.oneframe.Algebra
-import forex.services.rates.interpreters.live.OneFrameTokenProvider
-import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
-import io.chrisdavenport.log4cats.{ Logger, SelfAwareStructuredLogger }
-import retry._
-import sttp.client.SttpBackend
-import sttp.client._
-import io.circe.generic.auto._
-import com.softwaremill.sttp.circe._
-import io.circe.parser._
-import sttp.model.Uri
+import cats.syntax.applicative._
+import cats.syntax.apply._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
+import forex.config.OneFrameConfig
+import forex.domain.Rate
+import forex.http.oneframe.Protocol._
+import forex.services.oneframe.{ Algebra, OneFrameTokenProvider }
+import forex.services.oneframe.errors.OneFrameServiceError
+import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
+import io.chrisdavenport.log4cats.{ Logger, SelfAwareStructuredLogger }
+import io.circe
+import retry._
+import sttp.client.circe._
+import sttp.client.{ SttpBackend, _ }
+import sttp.model.Uri
 
 class OneFrameLive[F[_]: Async: Timer: Logger](config: OneFrameConfig,
-                                               backend: SttpBackend[F, _, _],
+                                               backend: SttpBackend[F, Nothing, NothingT],
                                                tokenProvider: OneFrameTokenProvider)
     extends Algebra[F] {
 
@@ -36,7 +37,7 @@ class OneFrameLive[F[_]: Async: Timer: Logger](config: OneFrameConfig,
     basicRequest.header("token", tokenProvider.getToken).headers(headers)
 
   private def logRetryError(throwable: Throwable, details: RetryDetails): F[Unit] =
-    getLogger.flatMap { logger =>
+    getLogger.flatMap { logger: SelfAwareStructuredLogger[F] =>
       details match {
         case RetryDetails.GivingUp(totalRetries, _) =>
           logger.error(throwable)(s"Giving up retrying to get data from OneFrame, after $totalRetries retries")
@@ -45,19 +46,33 @@ class OneFrameLive[F[_]: Async: Timer: Logger](config: OneFrameConfig,
       }
     }
 
-  override def getMany(pairs: Seq[Rate.Pair]): F[List[Rate]] = {
+  override def getMany(pairs: Seq[Rate.Pair]): F[Either[OneFrameServiceError, List[Rate]]] = {
     val params: Seq[(String, String)] = pairs.map((pair: Rate.Pair) => "pair" -> s"${pair.from}${pair.to}")
-    val url: Uri                      = uri"http://${config.http.host}:${config.http.port}?$params"
-    val request = backend.send(baseRequest.readTimeout(config.http.timeout).get(url)).flatMap {
-      response: Response[Either[String, String]] =>
-        //Using explicit conversion to JSON because OneFrame might return error with status code 200 OK
+    val url: Uri                      = uri"${config.http.host}:${config.http.port}/rates?$params"
+
+    val request: F[Either[OneFrameServiceError, List[Rate]]] = backend
+      .send {
+        baseRequest
+          .readTimeout(config.http.timeout)
+          .get(url)
+          .response(asJson[Either[OneFrameServiceError, List[Rate]]])
+      }
+      .flatMap { response: Response[Either[ResponseError[circe.Error], Either[OneFrameServiceError, List[Rate]]]] =>
         response.body match {
-          case Left(value)  =>
-          case Right(value) => decode[Seq[Rate]]
+          case Left(error: ResponseError[circe.Error])  => Left(OneFrameServiceError(error.body)).pure[F].widen
+          case Right(Left(error: OneFrameServiceError)) => Left(error).pure[F].widen
+          case Right(Right(rates: List[Rate])) =>
+            getLogger.map(_.debug(s"Got response for ${rates.size} rates from OneFrame")) *> Right(rates).pure[F].widen
         }
+      }
 
-    }
+    retryingOnAllErrors(retryPolicy, logRetryError)(request)
   }
+}
 
-  override def get(pair: Rate.Pair): F[Rate] = ???
+object OneFrameLive {
+  def apply[F[_]: Async: Timer: Logger](config: OneFrameConfig,
+                                        backend: SttpBackend[F, Nothing, NothingT],
+                                        tokenProvider: OneFrameTokenProvider): OneFrameLive[F] =
+    new OneFrameLive(config, backend, tokenProvider)
 }

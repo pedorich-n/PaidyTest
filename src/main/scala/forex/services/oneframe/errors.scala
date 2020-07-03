@@ -9,6 +9,6 @@ object errors {
     final case class OneFrameUnknownError() extends Error
   }
 
-  final case class OneFrameServiceError(message: String)
+  final case class OneFrameServiceError(message: String) extends Exception
 
 }

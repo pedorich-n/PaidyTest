@@ -1,8 +1,8 @@
 package forex.services.oneframe
 
 import forex.domain.Rate
+import forex.services.oneframe.errors.OneFrameServiceError
 
 trait Algebra[F[_]] {
-  def getMany(pairs: Seq[Rate.Pair]): F[List[Rate]] //TODO: Error
-  def get(pair: Rate.Pair): F[Rate] //TODO: Error
+  def getMany(pairs: Seq[Rate.Pair]): F[Either[OneFrameServiceError, List[Rate]]]
 }

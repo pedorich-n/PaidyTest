@@ -30,8 +30,12 @@ scalacOptions ++= Seq(
 resolvers +=
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
+connectInput in run := true
+fork in run := true
+
 libraryDependencies ++= Seq(
   compilerPlugin(Libraries.kindProjector),
+  compilerPlugin(Libraries.betterMonadicFor),
   Libraries.cats,
   Libraries.catsEffect,
   Libraries.catsRetry,

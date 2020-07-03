@@ -27,7 +27,7 @@ object Currency extends Enum[Currency] with CirceEnum[Currency] {
     values
       .combinations(2)
       .flatMap(_.permutations)
-      .collect { case List(from: Currency, to: Currency) => (from, to) }
+      .collect { case Seq(from: Currency, to: Currency) => (from, to) }
       .toList
   }
 

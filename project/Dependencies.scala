@@ -4,15 +4,16 @@ object Dependencies {
 
   object Versions {
     val cats                = "2.1.0"
-    val catsEffect          = "2.0.0"
+    val catsEffect          = "2.1.3"
     val catsRetry           = "1.1.1"
     val log4Cats            = "1.1.1"
-    val fs2                 = "2.1.0"
-    val http4s              = "0.20.15"
-    val circe               = "0.11.1"
-    val pureConfig          = "0.12.1"
+    val fs2                 = "2.4.2"
+    val http4s              = "0.21.6"
+    val circe               = "0.13.0"
+    val pureConfig          = "0.13.0"
 
-    val kindProjector       = "0.9.10"
+    val kindProjector       = "0.11.0"
+    val betterMonadicFor    = "0.3.1"
     val logback             = "1.2.3"
     val scalaCheck          = "1.14.3"
     val scalaTest           = "3.1.0"
@@ -20,7 +21,6 @@ object Dependencies {
 
     val enumeratum          = "1.6.1"
     val sttp                = "2.2.1"
-    val sttpCirce           = "1.7.2"
   }
 
   object Libraries {
@@ -40,16 +40,17 @@ object Dependencies {
     lazy val circeGeneric        = circe("circe-generic")
     lazy val circeGenericExt     = circe("circe-generic-extras")
     lazy val circeParser         = circe("circe-parser")
-    lazy val circeJava8          = circe("circe-java8")
+    lazy val circeJava8          = "io.circe" %% "circe-java8" % "0.11.1"
     lazy val pureConfig          = "com.github.pureconfig" %% "pureconfig"                 % Versions.pureConfig
 
     lazy val enumeratum          = "com.beachape"                 %% "enumeratum"          % Versions.enumeratum
     lazy val enumeratumCirce     = "com.beachape"                 %% "enumeratum-circe"    % Versions.enumeratum
     lazy val sttp                = "com.softwaremill.sttp.client" %% "core"                % Versions.sttp
-    lazy val sttpCirce           = "com.softwaremill.sttp"        %% "circe"               % Versions.sttpCirce
+    lazy val sttpCirce           = "com.softwaremill.sttp.client" %% "circe"               % Versions.sttp
 
     // Compiler plugins
-    lazy val kindProjector       = "org.spire-math"        %% "kind-projector"             % Versions.kindProjector
+    lazy val kindProjector       = "org.typelevel"         %% "kind-projector"             % Versions.kindProjector cross CrossVersion.full
+    lazy val betterMonadicFor    = "com.olegpy"            %% "better-monadic-for"         % Versions.betterMonadicFor
 
     // Runtime
     lazy val logback             = "ch.qos.logback"        %  "logback-classic"            % Versions.logback
