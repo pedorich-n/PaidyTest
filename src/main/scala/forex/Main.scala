@@ -1,6 +1,6 @@
 package forex
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
+import scala.concurrent.{ ExecutionContext, ExecutionContextExecutor }
 
 import java.util.concurrent.Executors
 
@@ -10,7 +10,7 @@ import cats.effect._
 import forex.config._
 import fs2.Stream
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
-import io.chrisdavenport.log4cats.{Logger, SelfAwareStructuredLogger}
+import io.chrisdavenport.log4cats.{ Logger, SelfAwareStructuredLogger }
 
 object Main extends IOApp {
   implicit val logger: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLogger[IO]
@@ -34,6 +34,7 @@ class Application[F[_]: ConcurrentEffect: Timer: Logger](ec: ExecutionContext) {
       _ <- BlazeServerBuilder[F](ec)
             .bindHttp(config.http.port, config.http.host)
             .withHttpApp(module.httpApp)
+            .withoutBanner
             .serve
             .concurrently(module.stream)
     } yield ()

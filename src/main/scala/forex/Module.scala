@@ -2,18 +2,18 @@ package forex
 
 import org.http4s._
 import org.http4s.implicits._
-import org.http4s.server.middleware.{AutoSlash, ErrorHandling, Timeout}
+import org.http4s.server.middleware.{ AutoSlash, ErrorAction, Timeout }
 
-import _root_.sttp.client.{HttpURLConnectionBackend, NothingT}
+import _root_.sttp.client.{ HttpURLConnectionBackend, NothingT }
 import cats.effect.concurrent.Ref
-import cats.effect.{Concurrent, Timer}
+import cats.effect.{ Concurrent, Timer }
 import forex.config.ApplicationConfig
 import forex.domain.Rate
 import forex.http.rates.RatesHttpRoutes
 import forex.programs._
 import forex.services._
-import forex.services.oneframe.interpreters.{OneFrameLive, StaticTokenProvider}
-import forex.services.oneframe.{OneFrameTokenProvider, Algebra => OneFrameAlgebra}
+import forex.services.oneframe.interpreters.{ OneFrameLive, StaticTokenProvider }
+import forex.services.oneframe.{ OneFrameTokenProvider, Algebra => OneFrameAlgebra }
 import forex.services.rates.interpreters.DefaultDateProvider
 import forex.services.ratesBoard.interpreters.LiveCachedRatesBoard
 import forex.services.sttp.SyncSttpBackend
@@ -43,11 +43,12 @@ class Module[F[_]: Concurrent: Timer: Logger](config: ApplicationConfig) {
   type TotalMiddleware   = HttpApp[F] => HttpApp[F]
 
   private val routesMiddleware: PartialMiddleware = { http: HttpRoutes[F] =>
-    ErrorHandling(AutoSlash(http))
+    AutoSlash(http)
   }
 
   private val appMiddleware: TotalMiddleware = { http: HttpApp[F] =>
-    Timeout(config.http.timeout)(http)
+    val logError: (Throwable, => String) => F[Unit] = (t, m) => Logger[F].error(t)(m)
+    ErrorAction.log(Timeout(config.http.timeout)(http), logError, logError)
   }
 
   private val http: HttpRoutes[F] = ratesHttpRoutes
