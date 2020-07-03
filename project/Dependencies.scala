@@ -21,6 +21,7 @@ object Dependencies {
 
     val enumeratum          = "1.6.1"
     val sttp                = "2.2.1"
+    val guava               = "29.0-jre"
   }
 
   object Libraries {
@@ -47,6 +48,8 @@ object Dependencies {
     lazy val enumeratumCirce     = "com.beachape"                 %% "enumeratum-circe"    % Versions.enumeratum
     lazy val sttp                = "com.softwaremill.sttp.client" %% "core"                % Versions.sttp
     lazy val sttpCirce           = "com.softwaremill.sttp.client" %% "circe"               % Versions.sttp
+    // For ThreadFactoryBuilder only
+    lazy val guava               =  "com.google.guava"            % "guava"                % Versions.guava
 
     // Compiler plugins
     lazy val kindProjector       = "org.typelevel"         %% "kind-projector"             % Versions.kindProjector cross CrossVersion.full

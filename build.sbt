@@ -55,6 +55,7 @@ libraryDependencies ++= Seq(
   Libraries.enumeratumCirce,
   Libraries.sttp,
   Libraries.sttpCirce,
+  Libraries.guava,
   Libraries.scalaTest      % Test,
   Libraries.scalaCheck     % Test,
   Libraries.catsScalaCheck % Test

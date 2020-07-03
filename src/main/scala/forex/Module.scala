@@ -30,10 +30,10 @@ class Module[F[_]: Concurrent: Timer: Logger](config: ApplicationConfig) {
   }
 
   val ref: Ref[F, Map[Rate.Pair, Rate]]      = Ref.unsafe(Map.empty[Rate.Pair, Rate])
-  private val board: LiveCachedRatesBoard[F] = new LiveCachedRatesBoard[F](oneFrame, ref, config.oneFrame.cacheTtl)
+  private val board: LiveCachedRatesBoard[F] = new LiveCachedRatesBoard[F](oneFrame, ref, config.oneFrame.rateExpiration)
 
   private val ratesService: RatesService[F] =
-    RatesServices.live(board, config.oneFrame.cacheTtl, new DefaultDateProvider())
+    RatesServices.live(board, config.oneFrame.rateExpiration, new DefaultDateProvider())
 
   private def ratesProgram: RatesProgram[F] = RatesProgram[F](ratesService)
 
@@ -55,6 +55,6 @@ class Module[F[_]: Concurrent: Timer: Logger](config: ApplicationConfig) {
 
   val httpApp: HttpApp[F] = appMiddleware(routesMiddleware(http).orNotFound)
 
-  val stream: Stream[F, Unit] = board.backgroundStream()
+  val concurrentStream: Stream[F, Unit] = board.backgroundStream()
 
 }
