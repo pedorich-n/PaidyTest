@@ -11,6 +11,6 @@ object errors {
     final case class OneFrameUnknownError(message: String) extends Error
   }
 
-  final case class OneFrameServiceErrorResponse(message: String)
+  final case class OneFrameServiceErrorResponse(error: String) extends Exception(error)
 
 }

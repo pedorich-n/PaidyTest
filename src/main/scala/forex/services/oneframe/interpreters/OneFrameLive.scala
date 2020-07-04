@@ -1,18 +1,18 @@
 package forex.services.oneframe.interpreters
 
-import java.net.{ ConnectException, SocketTimeoutException }
+import java.net.{ConnectException, SocketTimeoutException}
 
-import cats.effect.{ Async, Timer }
+import cats.effect.{Async, Timer}
 import cats.syntax.applicativeError._
 import cats.syntax.functor._
 import forex.config.OneFrameConfig
 import forex.domain.Rate
 import forex.http.oneframe.Protocol._
-import forex.services.oneframe.errors.Error.{ OneFrameTimeoutError, OneFrameUnknownError, OneFrameUnreachableError }
-import forex.services.oneframe.errors.{ Error, OneFrameServiceErrorResponse }
-import forex.services.oneframe.{ Algebra, OneFrameTokenProvider }
+import forex.services.oneframe.errors.Error.{OneFrameTimeoutError, OneFrameUnknownError, OneFrameUnreachableError}
+import forex.services.oneframe.errors.{Error, OneFrameServiceErrorResponse}
+import forex.services.oneframe.{Algebra, OneFrameTokenProvider}
 import io.chrisdavenport.log4cats.Logger
-import io.circe
+import io.circe.{Error => CError}
 import retry._
 import sttp.client._
 import sttp.client.circe._
@@ -34,10 +34,10 @@ class OneFrameLive[F[_]: Async: Timer: Logger](config: OneFrameConfig,
   private def baseRequest: RequestT[Empty, Either[String, String], Nothing] =
     basicRequest.header("token", tokenProvider.getToken).headers(headers)
 
-  private def logRetryError(throwable: Throwable, details: RetryDetails): F[Unit] =
+  private def logRetryError(details: RetryDetails): F[Unit] =
     details match {
       case RetryDetails.GivingUp(totalRetries, _) =>
-        Logger[F].error(throwable)(s"Giving up retrying to get data from OneFrame, after $totalRetries retries")
+        Logger[F].error(s"Giving up retrying to get data from OneFrame, after $totalRetries retries")
       case RetryDetails.WillDelayAndRetry(nextDelay, _, _) =>
         Logger[F].warn(s"Error getting data from OneFrame, will retry in ${nextDelay.toSeconds} seconds")
     }
@@ -57,10 +57,10 @@ class OneFrameLive[F[_]: Async: Timer: Logger](config: OneFrameConfig,
           }
       }
       .map[Either[Error, List[Rate]]] {
-        response: Response[Either[ResponseError[circe.Error], Either[OneFrameServiceErrorResponse, List[Rate]]]] =>
+        response: Response[Either[ResponseError[CError], Either[OneFrameServiceErrorResponse, List[Rate]]]] =>
           response.body match {
-            case Left(error: ResponseError[circe.Error])          => Left(OneFrameUnknownError(error.body))
-            case Right(Left(error: OneFrameServiceErrorResponse)) => Left(OneFrameUnknownError(error.message))
+            case Left(error: ResponseError[CError])               => Left(OneFrameUnknownError(s"Circe failure! ${error.body}"))
+            case Right(Left(error: OneFrameServiceErrorResponse)) => Left(OneFrameUnknownError(error.error))
             case Right(Right(rates: List[Rate]))                  => Right(rates)
           }
       }
@@ -70,7 +70,7 @@ class OneFrameLive[F[_]: Async: Timer: Logger](config: OneFrameConfig,
         case t: Throwable              => Left(OneFrameUnknownError(t.getMessage))
       }
 
-    retryingOnAllErrors(retryPolicy, logRetryError)(request)
+    retryingM[Either[Error, List[Rate]]](retryPolicy, _.isRight, (_, details) => logRetryError(details))(request)
   }
 }
 

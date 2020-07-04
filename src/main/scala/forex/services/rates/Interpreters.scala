@@ -9,6 +9,6 @@ import interpreters._
 
 object Interpreters {
   def dummy[F[_]: Applicative](): Algebra[F] = new OneFrameDummy[F]()
-  def live[F[_]: Sync](board: RatesBoardService[F], expiration: FiniteDuration, dateProvider: DateProvider) =
+  def live[F[_]: Sync](board: RatesBoardService[F], expiration: FiniteDuration, dateProvider: DateTimeProvider) =
     new OneFrameRatesLive[F](board, expiration, dateProvider)
 }

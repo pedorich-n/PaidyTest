@@ -29,20 +29,6 @@ scalacOptions ++= Seq(
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-connectInput in run := true
-fork in run := true
-
-mainClass := Some("forex.Main")
-assembly in ThisBuild := (assembly dependsOn dependencyUpdates).value
-
-assemblyMergeStrategy in assembly := {
-  case m if m.toLowerCase.endsWith("manifest.mf")          => MergeStrategy.discard
-  case m if m.toLowerCase.matches("meta-inf.*\\.sf$")      => MergeStrategy.discard
-  case m if m.toLowerCase.startsWith("meta-inf/services/") => MergeStrategy.filterDistinctLines
-  case m if m.toLowerCase.contains("license")              => MergeStrategy.first
-  case _                                                   => MergeStrategy.first
-}
-
 libraryDependencies ++= Seq(
   compilerPlugin(Libraries.kindProjector),
   compilerPlugin(Libraries.betterMonadicFor),
@@ -68,5 +54,23 @@ libraryDependencies ++= Seq(
   Libraries.guava,
   Libraries.scalaTest      % Test,
   Libraries.scalaCheck     % Test,
-  Libraries.catsScalaCheck % Test
+  Libraries.catsScalaCheck % Test,
+  Libraries.log4CatsNoop   % Test
 )
+
+connectInput in run := true
+fork in run := true
+
+coverageEnabled in (Test, compile) := true
+coverageEnabled in (Compile, compile) := false
+coverageExcludedPackages := "<empty>;.*Main;.*Module;.*Application;"
+
+mainClass := Some("forex.Main")
+assembly := (assembly dependsOn dependencyUpdates).value
+assemblyMergeStrategy in assembly := {
+  case m if m.toLowerCase.endsWith("manifest.mf")          => MergeStrategy.discard
+  case m if m.toLowerCase.matches("meta-inf.*\\.sf$")      => MergeStrategy.discard
+  case m if m.toLowerCase.startsWith("meta-inf/services/") => MergeStrategy.filterDistinctLines
+  case m if m.toLowerCase.contains("license")              => MergeStrategy.first
+  case _                                                   => MergeStrategy.first
+}

@@ -32,6 +32,7 @@ object Dependencies {
     lazy val catsEffect          = "org.typelevel"         %% "cats-effect"                % Versions.catsEffect
     lazy val catsRetry           = "com.github.cb372"      %% "cats-retry"                 % Versions.catsRetry
     lazy val log4Cats            = "io.chrisdavenport"     %% "log4cats-slf4j"             % Versions.log4Cats
+    lazy val log4CatsNoop        = "io.chrisdavenport"     %% "log4cats-noop"              % Versions.log4Cats
     lazy val fs2                 = "co.fs2"                %% "fs2-core"                   % Versions.fs2
 
     lazy val http4sDsl           = http4s("http4s-dsl")

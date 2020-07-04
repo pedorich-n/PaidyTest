@@ -14,7 +14,7 @@ import forex.programs._
 import forex.services._
 import forex.services.oneframe.OneFrameTokenProvider
 import forex.services.oneframe.interpreters.StaticTokenProvider
-import forex.services.rates.interpreters.DefaultDateProvider
+import forex.services.rates.interpreters.DefaultDateTimeProvider
 import forex.services.ratesBoard.interpreters.LiveCachedRatesBoard
 import fs2.Stream
 import io.chrisdavenport.log4cats.Logger
@@ -34,7 +34,7 @@ class Module[F[_]: Concurrent: Timer: Logger](config: ApplicationConfig) {
   private val board: LiveCachedRatesBoard[F]    = RatesBoardService.live[F](oneFrame, ref, config.oneFrame.ratesRefresh)
 
   private val ratesService: RatesService[F] =
-    RatesServices.live[F](board, config.ratesExpiration, new DefaultDateProvider())
+    RatesServices.live[F](board, config.ratesExpiration, new DefaultDateTimeProvider())
 
   private val ratesProgram: RatesProgram[F] = RatesProgram[F](ratesService)
 

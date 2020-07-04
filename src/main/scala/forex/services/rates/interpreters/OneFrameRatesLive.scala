@@ -2,7 +2,7 @@ package forex.services.rates.interpreters
 
 import scala.concurrent.duration.FiniteDuration
 
-import java.time.OffsetDateTime
+import java.time.{ OffsetDateTime, ZoneOffset }
 import java.time.temporal.ChronoUnit
 
 import cats.effect.Sync
@@ -10,14 +10,17 @@ import cats.syntax.functor._
 import forex.domain.Rate
 import forex.services.RatesBoardService
 import forex.services.rates.errors.Error.LookupFailed
-import forex.services.rates.{ errors, Algebra, DateProvider }
+import forex.services.rates.{ errors, Algebra, DateTimeProvider }
 
-class OneFrameRatesLive[F[_]: Sync](board: RatesBoardService[F], expiration: FiniteDuration, dateProvider: DateProvider)
+class OneFrameRatesLive[F[_]: Sync](board: RatesBoardService[F],
+                                    expiration: FiniteDuration,
+                                    dateProvider: DateTimeProvider)
     extends Algebra[F] {
 
   override def get(request: Rate.Pair): F[Either[errors.Error, Rate]] = {
     def isOld(dateTime: OffsetDateTime): Boolean =
-      dateTime.isAfter(dateProvider.getNow.plus(expiration.toMillis, ChronoUnit.MILLIS))
+      dateProvider.getNowUTC
+        .isAfter(dateTime.atZoneSameInstant(ZoneOffset.UTC).plus(expiration.toMillis, ChronoUnit.MILLIS))
 
     board.getRates.map { rates: Map[Rate.Pair, Rate] =>
       rates
