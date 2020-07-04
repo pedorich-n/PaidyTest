@@ -26,7 +26,7 @@ class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
         validatedParams,
         (request: RatesProgramProtocol.GetRatesRequest) =>
           rates.get(request).flatMap {
-            case Left(error: RateLookupFailed) => InternalServerError(ErrorResponse(error.msg))
+            case Left(error: RateLookupFailed) => InternalServerError(ErrorResponse(error.msg)) //TODO: log on error?
             case Right(rate: Rate)             => Ok(rate.asGetApiResponse)
         }
       )

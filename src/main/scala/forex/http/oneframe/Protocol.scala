@@ -11,7 +11,7 @@ import io.circe.generic.semiauto._
 
 object Protocol {
 
-  implicit val currencyDecoder: Decoder[Currency] = Decoder.decodeString.emapTry(Currency.withNameEither(_).toTry)
+  implicit val currencyDecoder: Decoder[Currency] = Currency.circeDecoder
   implicit val timestampDecoder: Decoder[OffsetDateTime] =
     Decoder.decodeString.emapTry((value: String) => Try(OffsetDateTime.parse(value)))
 

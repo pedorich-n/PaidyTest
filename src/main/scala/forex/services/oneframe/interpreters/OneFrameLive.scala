@@ -4,7 +4,6 @@ import java.net.{ ConnectException, SocketTimeoutException }
 
 import cats.effect.{ Async, Timer }
 import cats.syntax.applicativeError._
-import cats.syntax.flatMap._
 import cats.syntax.functor._
 import forex.config.OneFrameConfig
 import forex.domain.Rate
@@ -12,20 +11,17 @@ import forex.http.oneframe.Protocol._
 import forex.services.oneframe.errors.Error.{ OneFrameTimeoutError, OneFrameUnknownError, OneFrameUnreachableError }
 import forex.services.oneframe.errors.{ Error, OneFrameServiceErrorResponse }
 import forex.services.oneframe.{ Algebra, OneFrameTokenProvider }
-import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
-import io.chrisdavenport.log4cats.{ Logger, SelfAwareStructuredLogger }
+import io.chrisdavenport.log4cats.Logger
 import io.circe
 import retry._
+import sttp.client._
 import sttp.client.circe._
-import sttp.client.{ SttpBackend, _ }
 import sttp.model.Uri
 
 class OneFrameLive[F[_]: Async: Timer: Logger](config: OneFrameConfig,
                                                backend: SttpBackend[Identity, Nothing, NothingT],
                                                tokenProvider: OneFrameTokenProvider)
     extends Algebra[F] {
-
-  private val getLogger: F[SelfAwareStructuredLogger[F]] = Slf4jLogger.create[F]
 
   private val retryPolicy: RetryPolicy[F] =
     RetryPolicies.limitRetries(config.retryPolicy.maxRetries) join RetryPolicies.constantDelay(config.retryPolicy.delay)
@@ -39,13 +35,11 @@ class OneFrameLive[F[_]: Async: Timer: Logger](config: OneFrameConfig,
     basicRequest.header("token", tokenProvider.getToken).headers(headers)
 
   private def logRetryError(throwable: Throwable, details: RetryDetails): F[Unit] =
-    getLogger.flatMap { logger: SelfAwareStructuredLogger[F] =>
-      details match {
-        case RetryDetails.GivingUp(totalRetries, _) =>
-          logger.error(throwable)(s"Giving up retrying to get data from OneFrame, after $totalRetries retries")
-        case RetryDetails.WillDelayAndRetry(nextDelay, _, _) =>
-          logger.warn(s"Error getting data from OneFrame, will retry in ${nextDelay.toSeconds} seconds")
-      }
+    details match {
+      case RetryDetails.GivingUp(totalRetries, _) =>
+        Logger[F].error(throwable)(s"Giving up retrying to get data from OneFrame, after $totalRetries retries")
+      case RetryDetails.WillDelayAndRetry(nextDelay, _, _) =>
+        Logger[F].warn(s"Error getting data from OneFrame, will retry in ${nextDelay.toSeconds} seconds")
     }
 
   override def getMany(pairs: Seq[Rate.Pair]): F[Either[Error, List[Rate]]] = {

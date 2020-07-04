@@ -12,7 +12,7 @@ services:
       - backend
 
   api:
-    container_name: paidy_api
+    container_name: paidy_proxy_api
     build:
       context: ./
       dockerfile: Dockerfile

@@ -3,23 +3,20 @@ package forex.services.ratesBoard.interpreters
 import scala.concurrent.duration.FiniteDuration
 
 import cats.effect.concurrent.Ref
-import cats.effect.{ Async, Timer }
-import forex.domain.{ Currency, Rate }
-import fs2.Stream
-import cats.syntax.functor._
-import cats.syntax.flatMap._
+import cats.effect.{Async, Timer}
 import cats.syntax.applicativeError._
-import forex.services.oneframe.errors.Error.{ OneFrameTimeoutError, OneFrameUnknownError, OneFrameUnreachableError }
-import forex.services.{ OneFrameService, RatesBoardService }
-import io.chrisdavenport.log4cats.{ Logger, SelfAwareStructuredLogger }
-import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
+import cats.syntax.flatMap._
+import cats.syntax.functor._
+import forex.domain.{Currency, Rate}
+import forex.services.oneframe.errors.Error.{OneFrameTimeoutError, OneFrameUnknownError, OneFrameUnreachableError}
+import forex.services.{OneFrameService, RatesBoardService}
+import fs2.Stream
+import io.chrisdavenport.log4cats.Logger
 
 class LiveCachedRatesBoard[F[_]: Async: Timer: Logger](oneFrame: OneFrameService[F],
                                                        cache: Ref[F, Map[Rate.Pair, Rate]],
                                                        sleepDuration: FiniteDuration)
     extends RatesBoardService[F] {
-
-  private val getLogger: F[SelfAwareStructuredLogger[F]] = Slf4jLogger.create[F]
 
   override def getRates: F[Map[Rate.Pair, Rate]] = cache.get
 
@@ -39,7 +36,7 @@ class LiveCachedRatesBoard[F[_]: Async: Timer: Logger](oneFrame: OneFrameService
         .flatMap((newMap: Map[Rate.Pair, Rate]) => cache.set(newMap))
 
       process.handleErrorWith { t: Throwable =>
-        getLogger.flatMap(_.error(t)("An exception occurred in RatesBoard!"))
+        Logger[F].error(t)("An exception occurred in RatesBoard!")
       }
     }
 

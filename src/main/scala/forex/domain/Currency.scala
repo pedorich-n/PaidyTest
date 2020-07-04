@@ -2,9 +2,8 @@ package forex.domain
 
 import scala.collection.immutable
 
-import cats.Show
 import enumeratum.EnumEntry.Uppercase
-import enumeratum.{ CirceEnum, Enum, EnumEntry }
+import enumeratum.{CirceEnum, Enum, EnumEntry}
 
 sealed trait Currency extends EnumEntry with Uppercase
 
@@ -20,8 +19,6 @@ object Currency extends Enum[Currency] with CirceEnum[Currency] {
   case object USD extends Currency
 
   override val values: immutable.IndexedSeq[Currency] = findValues
-
-  implicit val show: Show[Currency] = Show.show(_.entryName)
 
   val allPairs: List[(Currency, Currency)] = {
     values

@@ -10,9 +10,9 @@ import cats.syntax.functor._
 import forex.domain.Rate
 import forex.services.RatesBoardService
 import forex.services.rates.errors.Error.LookupFailed
-import forex.services.rates.{Algebra, DateProvider, errors}
+import forex.services.rates.{ errors, Algebra, DateProvider }
 
-class OneFrameLive[F[_]: Sync](board: RatesBoardService[F], expiration: FiniteDuration, dateProvider: DateProvider)
+class OneFrameRatesLive[F[_]: Sync](board: RatesBoardService[F], expiration: FiniteDuration, dateProvider: DateProvider)
     extends Algebra[F] {
 
   override def get(request: Rate.Pair): F[Either[errors.Error, Rate]] = {
