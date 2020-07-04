@@ -5,19 +5,19 @@ import scala.concurrent.duration.FiniteDuration
 import cats.effect.concurrent.Ref
 import cats.effect.{ Async, Timer }
 import forex.domain.{ Currency, Rate }
-import forex.services.oneframe.{ Algebra => OneFrameAlgebra }
-import forex.services.ratesBoard.Algebra
 import fs2.Stream
 import cats.syntax.functor._
 import cats.syntax.flatMap._
 import cats.syntax.applicativeError._
+import forex.services.oneframe.errors.Error.{ OneFrameTimeoutError, OneFrameUnknownError, OneFrameUnreachableError }
+import forex.services.{ OneFrameService, RatesBoardService }
 import io.chrisdavenport.log4cats.{ Logger, SelfAwareStructuredLogger }
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 
-class LiveCachedRatesBoard[F[_]: Async: Timer: Logger](oneFrame: OneFrameAlgebra[F],
+class LiveCachedRatesBoard[F[_]: Async: Timer: Logger](oneFrame: OneFrameService[F],
                                                        cache: Ref[F, Map[Rate.Pair, Rate]],
                                                        sleepDuration: FiniteDuration)
-    extends Algebra[F] {
+    extends RatesBoardService[F] {
 
   private val getLogger: F[SelfAwareStructuredLogger[F]] = Slf4jLogger.create[F]
 
@@ -29,7 +29,12 @@ class LiveCachedRatesBoard[F[_]: Async: Timer: Logger](oneFrame: OneFrameAlgebra
     def getAndSetRates(): F[Unit] = {
       val process: F[Unit] = oneFrame
         .getMany(allPairs)
-        .flatMap(Async[F].fromEither)
+        .flatMap[List[Rate]] {
+          case Left(error: OneFrameUnknownError)      => Async[F].raiseError(new Exception(error.message))
+          case Left(error: OneFrameUnreachableError)  => Async[F].raiseError(new Exception(error.message))
+          case Left(error: OneFrameTimeoutError.type) => Async[F].raiseError(new Exception(error.message))
+          case Right(value: List[Rate])               => Async[F].pure(value)
+        }
         .map((rates: List[Rate]) => rates.map((rate: Rate) => rate.pair -> rate).toMap)
         .flatMap((newMap: Map[Rate.Pair, Rate]) => cache.set(newMap))
 
@@ -43,7 +48,8 @@ class LiveCachedRatesBoard[F[_]: Async: Timer: Logger](oneFrame: OneFrameAlgebra
 }
 
 object LiveCachedRatesBoard {
-  def apply[F[_]: Async: Timer: Logger](oneFrame: OneFrameAlgebra[F],
-                                        sleepDuration: FiniteDuration): F[LiveCachedRatesBoard[F]] =
-    Ref.of(Map.empty[Rate.Pair, Rate]).map(new LiveCachedRatesBoard(oneFrame, _, sleepDuration))
+  def apply[F[_]: Async: Timer: Logger](oneFrame: OneFrameService[F],
+                                        cache: Ref[F, Map[Rate.Pair, Rate]],
+                                        sleepDuration: FiniteDuration): LiveCachedRatesBoard[F] =
+    new LiveCachedRatesBoard(oneFrame, cache, sleepDuration)
 }

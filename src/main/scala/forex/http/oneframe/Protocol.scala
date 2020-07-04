@@ -5,8 +5,9 @@ import scala.util.Try
 import java.time.OffsetDateTime
 
 import forex.domain.{ Currency, Price, Rate, Timestamp }
-import forex.services.oneframe.errors.OneFrameServiceError
+import forex.services.oneframe.errors.OneFrameServiceErrorResponse
 import io.circe.{ Decoder, HCursor }
+import io.circe.generic.semiauto._
 
 object Protocol {
 
@@ -24,9 +25,8 @@ object Protocol {
       Rate(Rate.Pair(from, to), Price(price), Timestamp(timestamp))
   }
 
-  implicit val errorDecoder: Decoder[OneFrameServiceError] = (c: HCursor) =>
-    Decoder[String].at("message")(c).map(OneFrameServiceError) // TODO: Why deriveDecoder fails?
+  implicit val errorResponseDecoder: Decoder[OneFrameServiceErrorResponse] = deriveDecoder[OneFrameServiceErrorResponse]
 
-  implicit val rateOrErrorDecoder: Decoder[Either[OneFrameServiceError, List[Rate]]] =
-    errorDecoder.either(Decoder.decodeList(rateDecoder))
+  implicit val rateOrErrorDecoder: Decoder[Either[OneFrameServiceErrorResponse, List[Rate]]] =
+    errorResponseDecoder.either(Decoder.decodeList(rateDecoder))
 }

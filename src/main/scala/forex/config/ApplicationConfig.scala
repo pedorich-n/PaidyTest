@@ -5,7 +5,8 @@ import scala.concurrent.duration.FiniteDuration
 case class ApplicationConfig(
     http: HttpServerConfig,
     oneFrame: OneFrameConfig,
-    threading: ThreadingConfig
+    threading: ThreadingConfig,
+    ratesExpiration: FiniteDuration
 )
 
 case class HttpServerConfig(
@@ -21,7 +22,10 @@ case class HttpOneFrameConfig(
     timeout: FiniteDuration
 )
 
-case class OneFrameConfig(http: HttpOneFrameConfig, retryPolicy: RetryPolicy, token: String, rateExpiration: FiniteDuration)
+case class OneFrameConfig(http: HttpOneFrameConfig,
+                          retryPolicy: RetryPolicy,
+                          staticToken: String,
+                          ratesRefresh: FiniteDuration)
 
 case class RetryPolicy(maxRetries: Int, delay: FiniteDuration)
 

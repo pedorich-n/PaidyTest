@@ -27,11 +27,21 @@ scalacOptions ++= Seq(
   "-Ywarn-value-discard"
 )
 
-resolvers +=
-  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
 connectInput in run := true
 fork in run := true
+
+mainClass := Some("forex.Main")
+assembly in ThisBuild := (assembly dependsOn dependencyUpdates).value
+
+assemblyMergeStrategy in assembly := {
+  case m if m.toLowerCase.endsWith("manifest.mf")          => MergeStrategy.discard
+  case m if m.toLowerCase.matches("meta-inf.*\\.sf$")      => MergeStrategy.discard
+  case m if m.toLowerCase.startsWith("meta-inf/services/") => MergeStrategy.filterDistinctLines
+  case m if m.toLowerCase.contains("license")              => MergeStrategy.first
+  case _                                                   => MergeStrategy.first
+}
 
 libraryDependencies ++= Seq(
   compilerPlugin(Libraries.kindProjector),

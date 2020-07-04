@@ -1,0 +1,32 @@
+version: "3"
+
+networks:
+  backend:
+
+
+services:
+  oneFrame:
+    container_name: paidy_one_frame
+    image: paidyinc/one-frame
+    networks:
+      - backend
+
+  api:
+    container_name: paidy_api
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        - USER=executor
+        - UID=2000
+        - GID=2000
+    environment:
+      - API_PORT=9000
+      - ONE_FRAME_HOST=oneFrame
+      - ONE_FRAME_PORT=8080
+    networks:
+      - backend
+    ports:
+      - "9000:9000"
+    depends_on:
+      - oneFrame
