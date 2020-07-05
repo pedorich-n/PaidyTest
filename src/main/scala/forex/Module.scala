@@ -2,13 +2,15 @@ package forex
 
 import org.http4s._
 import org.http4s.implicits._
-import org.http4s.server.middleware.{ AutoSlash, ErrorAction, Timeout }
+import org.http4s.server.middleware.{AutoSlash, ErrorAction, Timeout}
 
-import _root_.sttp.client.{ HttpURLConnectionBackend, Identity, NothingT, SttpBackend }
+import _root_.sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
 import cats.effect.concurrent.Ref
-import cats.effect.{ Concurrent, Timer }
+import cats.effect.{Concurrent, Timer}
+import cats.syntax.applicativeError._
 import forex.config.ApplicationConfig
 import forex.domain.Rate
+import forex.http.ErrorResponse
 import forex.http.rates.RatesHttpRoutes
 import forex.programs._
 import forex.services._
@@ -46,7 +48,11 @@ class Module[F[_]: Concurrent: Timer: Logger](config: ApplicationConfig) {
 
   private val appMiddleware: TotalMiddleware = { http: HttpApp[F] =>
     val logError: (Throwable, => String) => F[Unit] = (t, m) => Logger[F].error(t)(m)
-    ErrorAction.log(Timeout(config.http.timeout)(http), logError, logError)
+    ErrorAction
+      .log(Timeout(config.http.timeout)(http), logError, logError)
+      .handleError { t: Throwable =>
+        Response(Status.InternalServerError).withEntity(ErrorResponse(t.getMessage))
+      }
   }
 
   private val http: HttpRoutes[F] = ratesHttpRoutes

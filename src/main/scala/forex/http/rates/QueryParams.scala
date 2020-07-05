@@ -32,7 +32,7 @@ object QueryParams {
       val from: Option[ParseResult[Currency]] = FromQueryParam.unapply(params)
       val to: Option[ParseResult[Currency]]   = ToQueryParam.unapply(params)
 
-      (to, from).mapN { case tuple: (ParseResult[Currency], ParseResult[Currency]) => tuple.mapN(GetRatesRequest) }
+      (from, to).mapN { case tuple: (ParseResult[Currency], ParseResult[Currency]) => tuple.mapN(GetRatesRequest) }
     }
   }
 

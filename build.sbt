@@ -14,7 +14,7 @@ scalacOptions ++= Seq(
   "-language:higherKinds",
   "-language:implicitConversions",
   "-unchecked",
-//  "-Xfatal-warnings",
+  "-Xfatal-warnings",
   "-Xfuture",
   "-Xlint",
   "-Ydelambdafy:method",
@@ -55,11 +55,14 @@ libraryDependencies ++= Seq(
   Libraries.scalaTest      % Test,
   Libraries.scalaCheck     % Test,
   Libraries.catsScalaCheck % Test,
-  Libraries.log4CatsNoop   % Test
+  Libraries.log4CatsNoop   % Test,
+  Libraries.circeLiteral   % Test
 )
 
 connectInput in run := true
 fork in run := true
+
+parallelExecution in Test := true
 
 coverageEnabled in (Test, compile) := true
 coverageEnabled in (Compile, compile) := false

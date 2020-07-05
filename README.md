@@ -13,8 +13,9 @@ This project is an implementation of the test task from Paidy - https://github.c
 1. Rates are not invertible, i.e. AUD-SGD != 1 / SGD-AUD
 2. Limit for calling external service is 1000 requests per day
 3. It is possible to get an unlimited number of rates from external service via one request
-3. Rate returned by the proxy shouldn't be older than 5 minutes
-4. It is possible that external service could fail or time out  
+4. Rate returned by the proxy shouldn't be older than 5 minutes
+5. Proxy should be able to serve at least 10000 requests per day (one every ≈8 seconds)
+6. It is possible that external service could fail or time out  
 
 ## Implementation
 
@@ -28,6 +29,8 @@ With the default configuration (can be changed) the application works like this:
 This setup allows us to have pretty fresh data for rates: ≈2 minutes old if underlying service works correctly and in normal conditions, it makes 720 requests per day to the external service. But it also takes into consideration possible failures of underlying service. If underlying service has failed but recovered within 2 minutes - clients still could use the Proxy without seeing error responses, but with a bit older data, which is still within the allowed range of 5 minutes.  
 
 So this setup allows the clients of the Proxy have fresh data while staying beyond the limit of requests to the external service and having spare time (≈2.5 minutes per 5 minutes timeframe) and requests (280 per day) to recover in case of error.
+
+All the errors are wraped into the `ErrorResponse(message: String)` model and returned as JSON body with suitable HTTP status code.
 
 ## Build and run
 There are multiple ways to run the Proxy.
