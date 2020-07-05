@@ -17,6 +17,7 @@ object Dependencies {
     val logback             = "1.2.3"
     val scalaCheck          = "1.14.3"
     val scalaTest           = "3.1.0"
+    val catsEffectTesting   = "0.4.0"
     val catsScalaCheck      = "0.2.0"
 
     val enumeratum          = "1.6.1"
@@ -32,7 +33,6 @@ object Dependencies {
     lazy val catsEffect          = "org.typelevel"         %% "cats-effect"                % Versions.catsEffect
     lazy val catsRetry           = "com.github.cb372"      %% "cats-retry"                 % Versions.catsRetry
     lazy val log4Cats            = "io.chrisdavenport"     %% "log4cats-slf4j"             % Versions.log4Cats
-    lazy val log4CatsNoop        = "io.chrisdavenport"     %% "log4cats-noop"              % Versions.log4Cats
     lazy val fs2                 = "co.fs2"                %% "fs2-core"                   % Versions.fs2
 
     lazy val http4sDsl           = http4s("http4s-dsl")
@@ -41,7 +41,6 @@ object Dependencies {
     lazy val circeCore           = circe("circe-core")
     lazy val circeGeneric        = circe("circe-generic")
     lazy val circeGenericExt     = circe("circe-generic-extras")
-    lazy val circeParser         = circe("circe-parser")
     lazy val circeLiteral        = circe("circe-literal")
     lazy val circeJava8          = "io.circe" %% "circe-java8" % "0.11.1"
     lazy val pureConfig          = "com.github.pureconfig" %% "pureconfig"                 % Versions.pureConfig

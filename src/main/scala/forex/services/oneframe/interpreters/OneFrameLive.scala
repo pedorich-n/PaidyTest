@@ -2,8 +2,9 @@ package forex.services.oneframe.interpreters
 
 import java.net.{ConnectException, SocketTimeoutException}
 
-import cats.effect.{Async, Timer}
+import cats.effect.{Async, Sync, Timer}
 import cats.syntax.applicativeError._
+import cats.syntax.flatMap._
 import cats.syntax.functor._
 import forex.config.OneFrameConfig
 import forex.domain.Rate
@@ -11,17 +12,29 @@ import forex.http.oneframe.Protocol._
 import forex.services.oneframe.errors.Error.{OneFrameTimeoutError, OneFrameUnknownError, OneFrameUnreachableError}
 import forex.services.oneframe.errors.{Error, OneFrameServiceErrorResponse}
 import forex.services.oneframe.{Algebra, OneFrameTokenProvider}
-import io.chrisdavenport.log4cats.Logger
+import forex.tools.WithLogger
+import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
 import io.circe.{Error => CError}
 import retry._
 import sttp.client._
 import sttp.client.circe._
 import sttp.model.Uri
 
-class OneFrameLive[F[_]: Async: Timer: Logger](config: OneFrameConfig,
-                                               backend: SttpBackend[Identity, Nothing, NothingT],
-                                               tokenProvider: OneFrameTokenProvider)
-    extends Algebra[F] {
+/**
+ * Live implementation of the OneFrame service that queries external service for getting the rates and supports
+ * retries and error response handling
+ * @param config OneFrame config
+ * @param backend Sttp backend instance, internally wrapped into the `F`
+ * @param tokenProvider Token provider for the OneFrame
+ * @tparam F Effect type
+ */
+class OneFrameLive[F[_]: Async: Timer](config: OneFrameConfig,
+                                       backend: SttpBackend[Identity, Nothing, NothingT],
+                                       tokenProvider: OneFrameTokenProvider)
+    extends Algebra[F]
+    with WithLogger[F] {
+
+  override implicit protected def sync: Sync[F] = implicitly[Sync[F]]
 
   private val retryPolicy: RetryPolicy[F] =
     RetryPolicies.limitRetries(config.retryPolicy.maxRetries) join RetryPolicies.constantDelay(config.retryPolicy.delay)
@@ -35,11 +48,13 @@ class OneFrameLive[F[_]: Async: Timer: Logger](config: OneFrameConfig,
     basicRequest.header("token", tokenProvider.getToken).headers(headers)
 
   private def logRetryError(details: RetryDetails): F[Unit] =
-    details match {
-      case RetryDetails.GivingUp(totalRetries, _) =>
-        Logger[F].error(s"Giving up retrying to get data from OneFrame, after $totalRetries retries")
-      case RetryDetails.WillDelayAndRetry(nextDelay, _, _) =>
-        Logger[F].warn(s"Error getting data from OneFrame, will retry in ${nextDelay.toSeconds} seconds")
+    getLogger.flatMap { logger: SelfAwareStructuredLogger[F] =>
+      details match {
+        case RetryDetails.GivingUp(totalRetries, _) =>
+          logger.error(s"Giving up retrying to get data from OneFrame, after $totalRetries retries")
+        case RetryDetails.WillDelayAndRetry(nextDelay, _, _) =>
+          logger.warn(s"Error getting data from OneFrame, will retry in ${nextDelay.toSeconds} seconds")
+      }
     }
 
   override def getMany(pairs: Seq[Rate.Pair]): F[Either[Error, List[Rate]]] = {
@@ -75,8 +90,8 @@ class OneFrameLive[F[_]: Async: Timer: Logger](config: OneFrameConfig,
 }
 
 object OneFrameLive {
-  def apply[F[_]: Async: Timer: Logger](config: OneFrameConfig,
-                                        backend: SttpBackend[Identity, Nothing, NothingT],
-                                        tokenProvider: OneFrameTokenProvider): OneFrameLive[F] =
+  def apply[F[_]: Async: Timer](config: OneFrameConfig,
+                                backend: SttpBackend[Identity, Nothing, NothingT],
+                                tokenProvider: OneFrameTokenProvider): OneFrameLive[F] =
     new OneFrameLive(config, backend, tokenProvider)
 }

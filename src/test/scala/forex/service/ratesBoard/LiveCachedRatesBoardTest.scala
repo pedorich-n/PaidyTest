@@ -16,12 +16,8 @@ import forex.services.oneframe.errors
 import forex.services.oneframe.errors.Error.{ OneFrameTimeoutError, OneFrameUnknownError, OneFrameUnreachableError }
 import forex.services.ratesBoard.interpreters.LiveCachedRatesBoard
 import forex.tools.AsyncIOSpec
-import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
-import io.chrisdavenport.log4cats.noop.NoOpLogger
 
 class LiveCachedRatesBoardTest extends AsyncWordSpecLike with Matchers with AsyncIOSpec {
-
-  implicit val logger: SelfAwareStructuredLogger[IO] = NoOpLogger.impl[IO]
 
   class StatefulOneFrameService[F[_]: Sync](values: IndexedSeq[Either[errors.Error, List[Rate]]])
       extends OneFrameService[F] {
@@ -46,7 +42,7 @@ class LiveCachedRatesBoardTest extends AsyncWordSpecLike with Matchers with Asyn
       val service: LiveCachedRatesBoard[IO] =
         LiveCachedRatesBoard(new StatefulOneFrameService(states), cache, FiniteDuration(2, "seconds"))
 
-      service.backgroundStream().take(3).compile.drain.flatMap { _ =>
+      service.updaterStream().take(3).compile.drain.flatMap { _ =>
         service.getRates.asserting { rates: Map[Rate.Pair, Rate] =>
           rates should contain theSameElementsAs Map(Rate.Pair(Currency.USD, Currency.AUD) -> rate)
         }
@@ -72,7 +68,7 @@ class LiveCachedRatesBoardTest extends AsyncWordSpecLike with Matchers with Asyn
       val service: LiveCachedRatesBoard[IO] =
         LiveCachedRatesBoard(new StatefulOneFrameService(states), cache, FiniteDuration(2, "seconds"))
 
-      service.backgroundStream().take(4).compile.drain.flatMap { _ =>
+      service.updaterStream().take(4).compile.drain.flatMap { _ =>
         service.getRates.asserting { rates: Map[Rate.Pair, Rate] =>
           rates should contain theSameElementsAs Map(Rate.Pair(Currency.USD, Currency.AUD) -> rate)
         }

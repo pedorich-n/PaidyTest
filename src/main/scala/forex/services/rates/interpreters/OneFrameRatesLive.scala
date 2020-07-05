@@ -12,6 +12,13 @@ import forex.services.RatesBoardService
 import forex.services.rates.errors.Error.LookupFailed
 import forex.services.rates.{ errors, Algebra, DateTimeProvider }
 
+/**
+ * OneFrame live implementation of Rates Service that relies on RatesBoard Service
+ * @param board RatesBoard instance
+ * @param expiration When to consider a rate expired
+ * @param dateProvider DateTimeProvider instance
+ * @tparam F Effect type
+ */
 class OneFrameRatesLive[F[_]: Sync](board: RatesBoardService[F],
                                     expiration: FiniteDuration,
                                     dateProvider: DateTimeProvider)

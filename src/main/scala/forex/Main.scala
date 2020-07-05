@@ -8,8 +8,6 @@ import cats.effect._
 import forex.config._
 import forex.tools.Helpers
 import fs2.Stream
-import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
-import io.chrisdavenport.log4cats.{ Logger, SelfAwareStructuredLogger }
 
 object Main extends IOApp {
 
@@ -17,8 +15,6 @@ object Main extends IOApp {
     * Need to use unsafe load in order to override ContextShift provided by IOApp.
     */
   val config: ApplicationConfig = Config.loadUnsafe("app")
-
-  implicit val logger: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLogger[IO]
 
   val executionContext: ExecutionContext = Helpers.getEcFromThreadingConfig(config.threading.main, "main-io-%d")
 
@@ -30,7 +26,7 @@ object Main extends IOApp {
 
 }
 
-class Application[F[_]: ConcurrentEffect: Timer: Logger](ec: ExecutionContext, config: ApplicationConfig) {
+class Application[F[_]: ConcurrentEffect: Timer](ec: ExecutionContext, config: ApplicationConfig) {
 
   def stream: Stream[F, ExitCode] = {
     val module = new Module[F](config)

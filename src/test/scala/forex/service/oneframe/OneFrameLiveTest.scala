@@ -13,13 +13,11 @@ import forex.domain.{ Currency, Price, Rate, Timestamp }
 import forex.services.oneframe.errors.Error.OneFrameUnknownError
 import forex.services.oneframe.interpreters.{ OneFrameLive, StaticTokenProvider }
 import forex.tools.AsyncIOSpec
-import io.chrisdavenport.log4cats.SelfAwareStructuredLogger
-import io.chrisdavenport.log4cats.noop.NoOpLogger
 import sttp.client.testing.SttpBackendStub
 import sttp.client.{ HttpURLConnectionBackend, Identity, NothingT, Request, SttpBackend }
+import sttp.model.Header
 
 class OneFrameLiveTest extends AsyncWordSpecLike with Matchers with AsyncIOSpec {
-  implicit val logger: SelfAwareStructuredLogger[IO] = NoOpLogger.impl[IO]
 
   val stubBackend: SttpBackendStub[Identity, Nothing, NothingT] = HttpURLConnectionBackend.stub
 
@@ -38,7 +36,8 @@ class OneFrameLiveTest extends AsyncWordSpecLike with Matchers with AsyncIOSpec 
       pairs.drop(1).foreach(pair => builder.append(s"&pair=${pair.from}${pair.to}"))
       builder.result()
     }
-    request.uri.toString() == s"http://localhost:8080/rates$queryParams"
+    request.uri.toString() == s"http://localhost:8080/rates$queryParams" &&
+    request.headers.contains(Header("token", config.staticToken))
   }
 
   "OneFrameLive" should {

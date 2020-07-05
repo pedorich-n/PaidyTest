@@ -3,7 +3,7 @@ package forex.domain
 import scala.collection.immutable
 
 import enumeratum.EnumEntry.Uppercase
-import enumeratum.{CirceEnum, Enum, EnumEntry}
+import enumeratum.{ CirceEnum, Enum, EnumEntry }
 
 sealed trait Currency extends EnumEntry with Uppercase
 
@@ -20,6 +20,9 @@ object Currency extends Enum[Currency] with CirceEnum[Currency] {
 
   override val values: immutable.IndexedSeq[Currency] = findValues
 
+  /**
+   * All the possible pairs permutation, without duplicates
+   */
   val allPairs: List[(Currency, Currency)] = {
     values
       .combinations(2)

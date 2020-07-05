@@ -1,11 +1,14 @@
 package forex.tools
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
-import org.scalatest.{Assertion, AsyncTestSuite, Succeeded}
+import org.scalatest.{ Assertion, AsyncTestSuite, Succeeded }
 
-import cats.effect.{ContextShift, IO, SyncIO, Timer}
+import cats.effect.{ ContextShift, IO, SyncIO, Timer }
 
+/**
+  * Modified from [[https://github.com/djspiewak/cats-effect-testing]] because it's poorly designed
+  */
 trait AsyncIOSpec extends AssertingSyntax { self: AsyncTestSuite =>
   override implicit val executionContext: ExecutionContext = ExecutionContext.global
   implicit val ioContextShift: ContextShift[IO]            = IO.contextShift(executionContext)

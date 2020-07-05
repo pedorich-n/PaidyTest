@@ -1,6 +1,6 @@
 package forex.tools
 
-import org.scalatest.{Assertion, Assertions, Succeeded}
+import org.scalatest.{ Assertion, Assertions, Succeeded }
 
 import cats.Functor
 import cats.effect.Sync
@@ -8,6 +8,9 @@ import cats.syntax.applicativeError._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 
+/**
+  * Modified from [[https://github.com/djspiewak/cats-effect-testing]] because it's poorly designed
+  */
 trait AssertingSyntax { self: Assertions =>
 
   /** Provides various ways to make test assertions on an `F[A]`. */
@@ -16,7 +19,7 @@ trait AssertingSyntax { self: Assertions =>
     /**
       * Asserts that the `F[A]` completes with an `A` which passes the supplied function.
       *
-     * @example {{{
+      * @example {{{
       * IO(1).asserting(_ shouldBe 1)
       * }}}
       */

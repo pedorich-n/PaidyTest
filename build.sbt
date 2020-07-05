@@ -43,7 +43,6 @@ libraryDependencies ++= Seq(
   Libraries.circeCore,
   Libraries.circeGeneric,
   Libraries.circeGenericExt,
-  Libraries.circeParser,
   Libraries.circeJava8,
   Libraries.pureConfig,
   Libraries.logback,
@@ -55,7 +54,6 @@ libraryDependencies ++= Seq(
   Libraries.scalaTest      % Test,
   Libraries.scalaCheck     % Test,
   Libraries.catsScalaCheck % Test,
-  Libraries.log4CatsNoop   % Test,
   Libraries.circeLiteral   % Test
 )
 

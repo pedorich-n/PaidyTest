@@ -66,7 +66,7 @@ curl 'http://127.0.0.1:9000/rates?from=USD&to=SGD'
 ```
 
 ## Possible improvements
-- More tests, integration tests
+- More tests (current coverage is ≈84%), integration tests
 - Better logging, metrics
 - Maybe rework the `LiveCachedRatesBoard`, I don't have that much experience with the FS2 streams, maybe it's bad practice to run multiple streams concurrently, started in Main.
 

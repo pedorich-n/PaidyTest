@@ -1,0 +1,14 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%d{dd/MM/yyyy HH:mm:ss}] %highlight(%-7([%level])) %cyan(%-32logger{20}) - %msg %ex{10} %n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="OFF">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+    <logger name="http4s"/>
+  </configuration>
+

@@ -2,12 +2,13 @@ package forex
 
 import org.http4s._
 import org.http4s.implicits._
-import org.http4s.server.middleware.{AutoSlash, ErrorAction, Timeout}
+import org.http4s.server.middleware.{ AutoSlash, ErrorAction, Timeout }
 
-import _root_.sttp.client.{HttpURLConnectionBackend, Identity, NothingT, SttpBackend}
+import _root_.sttp.client.{ HttpURLConnectionBackend, Identity, NothingT, SttpBackend }
 import cats.effect.concurrent.Ref
-import cats.effect.{Concurrent, Timer}
+import cats.effect.{ Concurrent, Sync, Timer }
 import cats.syntax.applicativeError._
+import cats.syntax.flatMap._
 import forex.config.ApplicationConfig
 import forex.domain.Rate
 import forex.http.ErrorResponse
@@ -18,10 +19,12 @@ import forex.services.oneframe.OneFrameTokenProvider
 import forex.services.oneframe.interpreters.StaticTokenProvider
 import forex.services.rates.interpreters.DefaultDateTimeProvider
 import forex.services.ratesBoard.interpreters.LiveCachedRatesBoard
+import forex.tools.WithLogger
 import fs2.Stream
-import io.chrisdavenport.log4cats.Logger
 
-class Module[F[_]: Concurrent: Timer: Logger](config: ApplicationConfig) {
+class Module[F[_]: Concurrent: Timer](config: ApplicationConfig) extends WithLogger[F] {
+
+  override implicit protected def sync: Sync[F] = implicitly[Sync[F]]
 
   type PartialMiddleware = HttpRoutes[F] => HttpRoutes[F]
   type TotalMiddleware   = HttpApp[F] => HttpApp[F]
@@ -47,7 +50,7 @@ class Module[F[_]: Concurrent: Timer: Logger](config: ApplicationConfig) {
   }
 
   private val appMiddleware: TotalMiddleware = { http: HttpApp[F] =>
-    val logError: (Throwable, => String) => F[Unit] = (t, m) => Logger[F].error(t)(m)
+    val logError: (Throwable, => String) => F[Unit] = (t, m) => getLogger.flatMap(_.error(t)(m))
     ErrorAction
       .log(Timeout(config.http.timeout)(http), logError, logError)
       .handleError { t: Throwable =>
@@ -59,6 +62,6 @@ class Module[F[_]: Concurrent: Timer: Logger](config: ApplicationConfig) {
 
   val httpApp: HttpApp[F] = appMiddleware(routesMiddleware(http).orNotFound)
 
-  val concurrentStream: Stream[F, Unit] = board.backgroundStream()
+  val concurrentStream: Stream[F, Unit] = board.updaterStream()
 
 }
